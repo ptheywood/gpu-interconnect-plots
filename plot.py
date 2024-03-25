@@ -2,6 +2,8 @@
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.ticker as ticker
 import seaborn as sns
 import pathlib
 
@@ -13,30 +15,31 @@ class Config:
         self.SNS_CONTEXT = "talk"
         self.SNS_STYLE = "darkgrid"
         self.SNS_PALETTE = "Dark2"
-        self.FIGSIZE_INCHES = (16, 9)
+        self.FIGSIZE_INCHES = (12, 7)
         self.DPI = 96
         self.X = "label"
-        self.XLABEL = "Interconnefct"
+        self.XLABEL = "Interconnect"
         self.Y = "peak bidirectional bandwidth (GB/s)"
         self.YLABEL = "Peak Bandwidth (GB/s)"
         self.YLIM_BOTTOM = None
-        self.HUE = "manufacturer"
-        self.HUELABEL="Manufacturer"
-        self.STYLE = "manufacturer"
-        self.STYLELABEL="Manufacturer"
+        self.HUE = "technology"
+        self.HUELABEL="Technology"
+        self.BAR_LABEL="model"
+        self.STYLE = self.HUE
+        self.STYLELABEL= self.HUELABEL
         self.LEGEND_BORDER_PAD = 0.5
         self.EXTERNAL_LEGEND = False
+        self.Y_TICK_MULTIPLE_LOCATOR=100
 
 def plot(args):
     config = Config()
 
-    df = pd.read_csv(args.input)
-    print(args)
+    df = pd.read_csv(args.input,keep_default_na=False)
 
     # Do some plotting stuff.
     sns.set_context(config.SNS_CONTEXT, rc={"lines.linewidth": 2.5})  
     sns.set_style(config.SNS_STYLE)
-    huecount = len(df[config.HUE].unique()) if config.HUE is not None else 1 
+    huecount = len(df[config.HUE].unique()) if config.HUE is not None else len(df) 
     palette = sns.color_palette(config.SNS_PALETTE, huecount)
     sns.set_palette(palette)
 
@@ -51,7 +54,13 @@ def plot(args):
         hue=config.HUE, 
         ax=ax,
         palette=palette,
+        dodge=False,
     )
+
+    # add bar labels
+    for container, hue_v in zip(ax.containers, df[config.HUE].unique()):
+        labels = df.query(f'{config.HUE}=="{hue_v}"')[config.BAR_LABEL] if config.BAR_LABEL is not None else None
+        ax.bar_label(container, labels=labels)#, label_type='center')
 
     # Axis settings
     if config.XLABEL:
@@ -59,8 +68,32 @@ def plot(args):
     if config.YLABEL:
         ax.set(ylabel=config.YLABEL)
 
-    title="@todo"
+    if config.Y_TICK_MULTIPLE_LOCATOR:
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(config.Y_TICK_MULTIPLE_LOCATOR))
+
+
+    title="GPU Host-Device Interconnect Bandwidth"
     ax.set_title(title)
+
+    # compute the legend label
+    legend_title = f"{config.HUELABEL} x {config.STYLELABEL}" if config.HUELABEL != config.STYLELABEL else f"{config.HUELABEL}"
+    # If using an external legend, do external placement. This is experimental.
+    if config.EXTERNAL_LEGEND:
+        # Set legend placement if not internal.
+        loc = "upper left"
+        # @todo - y offset should be LEGEND_BORDER_PAD transformed from font units to bbox.
+        bbox_to_anchor = (1, 1 - 0.0)
+        handles, labels = ax.get_legend_handles_labels()
+        # add an invisble patch with the appropriate label, like how seaborn does if multiple values are provided.
+        handles.insert(0, mpatches.Rectangle((0,0), 1, 1, fill=False, edgecolor='none', visible=False, label=hs_label))
+        labels.insert(0, legend_title)
+        legend = ax.legend(handles=handles, labels=labels, loc=loc, bbox_to_anchor=bbox_to_anchor, borderaxespad=config.LEGEND_BORDER_PAD)
+        plt.setp(legend.texts)
+    else:
+        if ax.get_legend() is not None:
+            legend = ax.get_legend()
+            legend.set_title(legend_title)
+            plt.setp(legend.texts);
 
     if args.output:
         if args.output.is_dir():
@@ -75,7 +108,7 @@ def plot(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input", type=pathlib.Path, help="input csv path")
+    parser.add_argument("-i", "--input", type=pathlib.Path, help="input csv path", required=True)
     parser.add_argument("-o", "--output", type=pathlib.Path, help="output image path. shows if omitted")
     parser.add_argument("-f", "--force", action="store_true", help="Overwrite existing output files")
     parser.add_argument("--title", type=str, help="Figure title")
