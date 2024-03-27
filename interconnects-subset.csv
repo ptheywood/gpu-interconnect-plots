@@ -1,5 +1,5 @@
 label,peak bidirectional bandwidth (GB/s),spec_year,gpu_year,technology,vendor,model,example
 PCIe 4 x16,31.508,2017,2019,PCI-SIG,NVIDIA,A100,Stanage
 PCIe 5 x16,63.015,2019,2023,PCI-SIG,NVIDIA,H100,
-NVLink 4,900,2023,2023,NVIDIA,NVIDIA,GH200,Bede
+NVLink 4,900,2023,2023,NVIDIA,NVIDIA,GH200,Bede GH200
 Infinity Fabric,128,2023,2023,AMD,AMD,MI300a,

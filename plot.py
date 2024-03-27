@@ -57,6 +57,10 @@ def plot(args):
         dodge=False,
     )
 
+    if args.bar_label:
+        if args.bar_label is None or args.bar_label in df:
+            config.BAR_LABEL=args.bar_label
+
     # add bar labels
     for container, hue_v in zip(ax.containers, df[config.HUE].unique()):
         labels = df.query(f'{config.HUE}=="{hue_v}"')[config.BAR_LABEL] if config.BAR_LABEL is not None else None
@@ -112,6 +116,7 @@ def main():
     parser.add_argument("-o", "--output", type=pathlib.Path, help="output image path. shows if omitted")
     parser.add_argument("-f", "--force", action="store_true", help="Overwrite existing output files")
     parser.add_argument("--title", type=str, help="Figure title")
+    parser.add_argument("--bar-label", type=str, help="CSV column to use for the bar label")
     args = parser.parse_args()
     plot(args)
 
