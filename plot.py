@@ -41,6 +41,8 @@ def plot(args):
     sns.set_style(config.SNS_STYLE)
     huecount = len(df[config.HUE].unique()) if config.HUE is not None else len(df) 
     palette = sns.color_palette(config.SNS_PALETTE, huecount)
+    if config.HUE == "technology" and len(palette) == 3:
+        palette = [palette[2], palette[0], palette[1]]
     sns.set_palette(palette)
 
     fig, ax = plt.subplots(constrained_layout=True)
@@ -103,7 +105,7 @@ def plot(args):
         if args.output.is_dir():
             raise Exception(f"{args.output} is a directory")
         elif args.output.is_file() and not args.force:
-            raise Exception(f"{args.is_file} is an existing file. Use -f/--force to overwrite")
+            raise Exception(f"{args.output} is an existing file. Use -f/--force to overwrite")
         # Save the figure to disk, creating the parent dir if needed.
         args.output.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(args.output, dpi=config.DPI, bbox_inches='tight')
