@@ -52,3 +52,7 @@ source .venv/bin/activate
 ./plot.py -i data/interconnects-subset.csv -o png/interconnects-subset.png -f
 ./plot.py -i data/interconnects-tuos.csv -o png/interconnects-tuos.png -f --bar-label example
 ```
+
+## License
+
+The content of this project itself is licensed under the [Creative Commons Attribution 4.0 license](https://creativecommons.org/licenses/by/4.0/), and the underlying source code used to format and display that content is licensed under the [MIT license](LICENSE.md).
